@@ -11,8 +11,12 @@ log_file = open("whale.log", "a")
 
 class ControlUtil:
     @staticmethod
+    def _get_formatted_time():
+        return datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+    @staticmethod
     def try_add_container(user_id, challenge_id, ip="Unknown"):
-        log_file.write("try_add_container: user_id={}, challenge_id={}, ip={}".format(user_id, challenge_id, ip))
+        log_file.write("[{}] try_add_container: user_id={}, challenge_id={}, ip={}".format(ControlUtil._get_formatted_time(), user_id, challenge_id, ip))
         container = DBContainer.create_container_record(user_id, challenge_id)
         try:
             DockerUtils.add_container(container)
@@ -30,7 +34,7 @@ class ControlUtil:
     @staticmethod
     def try_remove_container(user_id, ip="Unknown"):
         container = DBContainer.get_current_containers(user_id=user_id)
-        log_file.write("try_remove_container: user_id={}, ip={}".format(user_id, ip))
+        log_file.write("[{}] try_remove_container: user_id={}, ip={}".format(ControlUtil._get_formatted_time(), user_id, ip))
         if not container:
             return False, 'No such container'
         for _ in range(3):  # configurable? as "onerror_retry_cnt"
@@ -47,7 +51,7 @@ class ControlUtil:
 
     @staticmethod
     def try_renew_container(user_id, ip="Unknown"):
-        log_file.write("try_renew_container: user_id={}, ip={}".format(user_id, ip))
+        log_file.write("[{}] try_renew_container: user_id={}, ip={}".format(ControlUtil._get_formatted_time(), user_id, ip))
         container = DBContainer.get_current_containers(user_id)
         if not container:
             return False, 'No such container'
