@@ -41,9 +41,11 @@ class FrpRouter(BaseRouter):
                 WhaleWarning
             )
 
-    def reload(self):
+    def reload(self, exclude=None):
         rules = []
         for container in DBContainer.get_all_alive_container():
+            if container.uuid == exclude:
+                continue
             name = f'{container.challenge.redirect_type}_{container.user_id}_{container.uuid}'
             config = {
                 'type': self.types[container.challenge.redirect_type],
@@ -67,7 +69,7 @@ class FrpRouter(BaseRouter):
                     assert remote.status_code == 200
                     set_config("whale:frp_config_template", remote.text)
                     self.common = remote.text
-            config = self.common + '\n'.join(str(r) for r in rules)
+            config = self.common + '\n' + '\n'.join(str(r) for r in rules)
             assert self.ses.put(
                 f'{self.url}/api/config', config, timeout=5
             ).status_code == 200
@@ -117,7 +119,7 @@ class FrpRouter(BaseRouter):
                     challenge_id=container.challenge_id,
                 )
                 return False, 'Error deleting port from cache'
-        self.reload()
+        self.reload(exclude=container.uuid)
         return True, 'success'
 
     def check_availability(self):
